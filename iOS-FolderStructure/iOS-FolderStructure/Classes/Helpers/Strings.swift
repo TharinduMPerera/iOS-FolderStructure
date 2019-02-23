@@ -17,7 +17,8 @@ struct Strings {
     
     struct Messages {
         struct Success {
-            static let common = "Success!"
+            static let common = "Success."
+            static let dataDownload = "Data fetching succeed."
         }
         
         struct Error {

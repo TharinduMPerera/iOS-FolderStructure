@@ -12,12 +12,16 @@ import OLCOrm
 class WeatherData: OLCModel {
     
     // Reserved for WeatherData ID in WeatherData OLCOrm DB Table
-    var Id: NSNumber?
+    @objc var Id: NSNumber?
     
     @objc var locationId: Int = UnknownInt
     @objc var name: String?
     @objc var weatherDescription: String?
     @objc var temp: Float = UnkownFloat
+    
+    override init() {
+        super.init()
+    }
     
     init(locationId: Int, name: String, weatherDescription: String, temp: Float) {
         self.locationId = locationId
@@ -66,6 +70,16 @@ class WeatherData: OLCModel {
         }
         
         return false
+    }
+    
+    static func updateOrCreateWeatherData(data: WeatherData) {
+        
+        if let existingWeatherData = getWeatherDataByLocationId(locationId: data.locationId) {
+            data.Id = existingWeatherData.Id
+            data.update()
+        } else {
+            data.save()
+        }
     }
     
     // Public delete methods

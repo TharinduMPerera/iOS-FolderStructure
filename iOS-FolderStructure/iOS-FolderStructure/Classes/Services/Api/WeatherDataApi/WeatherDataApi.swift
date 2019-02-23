@@ -31,7 +31,11 @@ class WeatherDataApi: ApiCommunicator {
             if status == SuccessStatus {
                 if let dataList = content?.value(forKey: "list") as? [[String: Any]], let data = dataList.first {
                     let weatherData = WeatherData(json: data)
-                    completion(true, Strings.Messages.Success.common, weatherData)
+                    
+                    // DB caching
+                    WeatherData.updateOrCreateWeatherData(data: weatherData)
+                    
+                    completion(true, Strings.Messages.Success.dataDownload, weatherData)
                 } else {
                     completion(false, message, nil)
                 }

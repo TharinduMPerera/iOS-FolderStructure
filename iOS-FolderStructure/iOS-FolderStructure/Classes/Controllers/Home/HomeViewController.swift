@@ -19,6 +19,8 @@ class HomeViewController: AppParentViewController {
 
     private let weatherDataApi = WeatherDataApi()
     
+    private var isDataLoadingNeeded = true
+    
     //////////////////////////////////////////////////////
     //MARK: - View Controller Methods
     //////////////////////////////////////////////////////
@@ -27,20 +29,37 @@ class HomeViewController: AppParentViewController {
         super.viewDidLoad()
         
         initAlerts(containerView: mainContainerView)
-        resetDetailsView()
-        fetchData()
+        setupUI()
+        isDataLoadingNeeded = true
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if isDataLoadingNeeded {
+            fetchData()
+            isDataLoadingNeeded = false
+        }
     }
 
     //////////////////////////////////////////////////////
     //MARK: - Private Methods
     //////////////////////////////////////////////////////
     
+    private func setupUI() {
+        // Show details using DB caching
+        self.setDetailsView(data: WeatherData.getWeatherDataByLocationId(locationId: Int(CityCode) ?? UnknownInt))
+    }
+    
     private func fetchData() {
+        
         showActivityIndicator()
+        
         weatherDataApi.getData(cityId: CityCode) { (success, message, data) in
             self.hideActivityIndicator()
             if success && data != nil  {
-                self.setDetailsView(cityName: data!.name ?? "N/A", id: "\(data!.locationId == UnknownInt ? "N/A" : "\(data!.locationId)")", temp: "\(data!.temp == UnkownFloat ? "N/A" : "\(data!.temp)")", description: data!.weatherDescription ?? "N/A")
+                self.showAlert(message: message, type: .success, showed: nil, hidden: nil)
+                self.setDetailsView(data: data)
             } else {
                 self.showAlert(message: message, type: .error, showed: nil, hidden: nil)
             }
@@ -66,15 +85,18 @@ class HomeViewController: AppParentViewController {
         }
     }
     
-    private func setDetailsView(cityName: String, id: String, temp: String, description: String) {
-        cityLbl.setTitleAndValue(title: "City:  ", value: cityName)
-        idLbl.setTitleAndValue(title: "ID:  ", value: id)
-        tempLbl.setTitleAndValue(title: "Temp:  ", value: temp)
-        descLbl.setTitleAndValue(title: "Descrption:  ", value: description)
-    }
-    
-    private func resetDetailsView() {
-        self.setDetailsView(cityName: "N/A", id: "N/A", temp: "N/A", description: "N/A")
+    private func setDetailsView(data: WeatherData?) {
+        if let weatherData = data {
+            cityLbl.setTitleAndValue(title: "City:  ", value: weatherData.name ?? "N/A")
+            idLbl.setTitleAndValue(title: "ID:  ", value: "\(weatherData.locationId == UnknownInt ? "N/A" : "\(weatherData.locationId)")")
+            tempLbl.setTitleAndValue(title: "Temp:  ", value: "\(weatherData.temp == UnkownFloat ? "N/A" : "\(weatherData.temp) C")")
+            descLbl.setTitleAndValue(title: "Descrption:  ", value: weatherData.weatherDescription ?? "N/A")
+        } else {
+            cityLbl.setTitleAndValue(title: "City:  ", value: "N/A")
+            idLbl.setTitleAndValue(title: "ID:  ", value: "N/A")
+            tempLbl.setTitleAndValue(title: "Temp:  ", value: "N/A")
+            descLbl.setTitleAndValue(title: "Descrption:  ", value: "N/A")
+        }
     }
     
     //////////////////////////////////////////////////////
